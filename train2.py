@@ -84,7 +84,7 @@ if __name__ == '__main__':
     mylog = open('logs/'+NAME+'.log', 'w')
     tic = time()
     no_optim = 0
-    total_epoch = 300
+    total_epoch = 100
     train_epoch_best_loss = 100.
 
     for epoch in range(1, total_epoch + 1):
@@ -131,12 +131,12 @@ if __name__ == '__main__':
             mylog.write('early stop at' + str(epoch)+'epoch')
             print('early stop at %d epoch' % epoch)
             break
-        if no_optim > 3:
-            if solver.old_lr < 5e-7:
-                break
+        if no_optim > 3 and solver.old_lr>=5e-7:
+            # if solver.old_lr < 5e-7:
+            #     break
             # solver.load(last_save_name)
             solver.load('weights/'+NAME+'.th')
-            solver.update_lr(5.0, factor=True, mylog=mylog)
+            solver.update_lr(2.0, factor=True, mylog=mylog)
         mylog.flush()
 
     print(mylog, 'Finish!')
