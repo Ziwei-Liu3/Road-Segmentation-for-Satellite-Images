@@ -106,15 +106,15 @@ def default_loader(filename, image_root, gt_root, resize_shape):
     mask = cv2.resize(mask, resize_shape)
 
     img = randomHueSaturationValue(img,
-                                   hue_shift_limit=(-30, 30),
-                                   sat_shift_limit=(-5, 5),
-                                   val_shift_limit=(-15, 15))
+                                   hue_shift_limit=(-20, 20),
+                                   sat_shift_limit=(-10, 10),
+                                   val_shift_limit=(-10, 10))
 
     img, mask = randomShiftScaleRotate(img, mask,
-                                       shift_limit=(-0.1, 0.1),
+                                       shift_limit=(-0, 0),
                                        scale_limit=(-0.1, 0.1),
                                        aspect_limit=(-0.1, 0.1),
-                                       rotate_limit=(-0, 0))
+                                       rotate_limit=(-180, 180))
     img, mask = randomHorizontalFlip(img, mask)
     img, mask = randomVerticleFlip(img, mask)
     img, mask = randomRotate90(img, mask)
