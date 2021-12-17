@@ -94,8 +94,8 @@ if __name__ == '__main__':
     no_optim = 0
     total_epoch = 10
     train_epoch_best_loss = 100.
-    train_loss = []
-    val_loss = []
+    train_loss_list = []
+    val_loss_list = []
 
     for epoch in range(1, total_epoch + 1):
         print('---------- Epoch:'+str(epoch) + ' ----------')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         train_epoch_loss /= len(data_loader_iter)
 
         duration_of_epoch = int(time()-tic)
-        train_loss.append(train_epoch_loss)
+        train_loss_list.append(train_epoch_loss)
         mylog.write('********************' + '\n')
         mylog.write('--epoch:' + str(epoch) + '  --time:' + str(duration_of_epoch) + '  --train_loss:' + str(
             train_epoch_loss) + '\n')
@@ -126,7 +126,7 @@ if __name__ == '__main__':
             val_loss = solver.optimize(True)
             validation_epoch_loss += val_loss
         validation_epoch_loss /= len(val_img_list)
-        val_loss.append(validation_epoch_loss)
+        val_loss_list.append(validation_epoch_loss)
         mylog.write('--epoch:' + str(epoch) +
                     '  --validation_loss:' + str(validation_epoch_loss) + '\n')
         print('--epoch:', epoch,  '  --validation_loss:',

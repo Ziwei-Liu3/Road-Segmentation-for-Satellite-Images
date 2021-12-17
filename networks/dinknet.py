@@ -149,7 +149,7 @@ class DinkNet34_less_pool(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 # class DinkNet18(nn.Module):
@@ -206,7 +206,7 @@ class DinkNet34_less_pool(nn.Module):
 #         out = self.finalrelu2(out)
 #         out = self.finalconv3(out)
 
-#         return F.sigmoid(out)
+#         return torch.sigmoid(out)
 
 
 class DinkNet34(nn.Module):
@@ -263,7 +263,7 @@ class DinkNet34(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 class DinkNet50(nn.Module):
@@ -319,7 +319,7 @@ class DinkNet50(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 class DinkNet101(nn.Module):
@@ -375,7 +375,7 @@ class DinkNet101(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 class DinkNet152(nn.Module):
@@ -431,7 +431,7 @@ class DinkNet152(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 class LinkNet34(nn.Module):
@@ -482,4 +482,4 @@ class LinkNet34(nn.Module):
         out = self.finalrelu2(out)
         out = self.finalconv3(out)
 
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
