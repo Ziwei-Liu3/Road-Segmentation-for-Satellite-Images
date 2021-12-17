@@ -78,7 +78,7 @@ class MyFrame():
         pred_made = torch.clone(pred)
         pred_made[pred_made > 0.5] = 1
         pred_made[pred_made <= 0.5] = 0
-        F1 = self.compute_F1(self.mask, self.mask)
+        F1 = self.compute_F1(pred_made, pred_made)
         
         return F1, loss.item()
 
