@@ -92,7 +92,7 @@ if __name__ == '__main__':
     mylog = open('logs/'+NAME+'.log', 'w')
     tic = time()
     no_optim = 0
-    total_epoch = 100
+    total_epoch = 10
     train_epoch_best_loss = 100.
     train_loss = []
     val_loss = []
@@ -154,6 +154,3 @@ if __name__ == '__main__':
     print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
-
-    plt.plot(train_loss)
-    plt.plot(val_loss)
