@@ -82,7 +82,7 @@ class MyFrame():
 
     def compute_F1(pred, gt, args):
         """extract label list"""
-        f1 = f1_score(pred.ravel(), np.array(gt).ravel())
+        f1 = f1_score(np.ravel(pred), np.ravel(gt))
         return f1
 
     def save(self, path):
