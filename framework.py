@@ -71,24 +71,19 @@ class MyFrame():
             loss = self.loss(self.mask, pred)
             loss.backward()
             self.optimizer.step()
-            return loss.item()
         else:
             self.net.eval()
             pred = self.net.forward(self.img)
-
-            pred_made = torch.clone(pred)
-            pred_made[pred_made > 0.5] = 1
-            pred_made[pred_made <= 0.5] = 0
-
-            F1 = self.compute_F1(pred_made, self.mask)#, pred)
             loss = self.loss(self.mask, pred)
-            return F1.item(), loss.item()
+
+        F1 = self.compute_F1(pred, self.mask)
+        
+        return F1, loss.item()
 
 
-    def compute_F1(self, pred, gt):
+    def compute_F1(pred, gt):
         """extract label list"""
-        f1 = f1_score(torch.ravel(pred).cpu().detach().numpy(), \
-        torch.ravel(gt).cpu().detach().numpy())
+        f1 = f1_score(torch.ravel(pred), torch.ravel(gt))
         return f1
 
     def save(self, path):
