@@ -168,7 +168,8 @@ if __name__ == '__main__':
 
     mylog.write('--complete_train_loss:' + str(train_loss_list) + '\n')
     mylog.write('--complete_validation_loss:' + str(val_loss_list) + '\n')
-    mylog.write('--complete_F1_scores:' + str(F1_list) + '\n')
+    mylog.write('--complete_train_F1_scores:' + str(train_F1_list) + '\n')
+    mylog.write('--complete_validation_F1_scores:' + str(val_F1_list) + '\n')
     print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
