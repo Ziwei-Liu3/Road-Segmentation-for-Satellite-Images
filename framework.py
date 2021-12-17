@@ -69,16 +69,17 @@ class MyFrame():
             self.optimizer.zero_grad()
             self.net.train()
             pred = self.net.forward(self.img)
+            loss = self.loss(self.mask, pred)
         else:
             self.net.eval()
             pred = self.net.forward(self.img)
             F1 = self.compute_F1(pred, self.mask)
-            
-        loss = self.loss(self.mask, pred)
+            loss = self.loss(self.mask, pred)
+            return F1, loss.item()
         if not eval:
             loss.backward()
             self.optimizer.step()
-        return pred, loss.item()
+            return loss.item()
 
     def compute_F1(pred, gt, args):
         """extract label list"""

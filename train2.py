@@ -94,7 +94,7 @@ if __name__ == '__main__':
     mylog = open('logs/'+NAME+'.log', 'w')
     tic = time()
     no_optim = 0
-    total_epoch = 10
+    total_epoch = 100
     train_epoch_best_loss = 100.
     train_loss_list = []
     val_loss_list = []
