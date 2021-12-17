@@ -1,9 +1,10 @@
 import torch
+import matplotlib as plt 
 # import torch.optim as optim
 # from torch.optim import lr_scheduler
-# import torch.nn as nn
 # import torch.utils.data as data
 # from torch.autograd import Variable as V
+
 import random
 import math
 # import cv2
@@ -93,6 +94,8 @@ if __name__ == '__main__':
     no_optim = 0
     total_epoch = 100
     train_epoch_best_loss = 100.
+    train_loss = []
+    val_loss = []
 
     for epoch in range(1, total_epoch + 1):
         print('---------- Epoch:'+str(epoch) + ' ----------')
@@ -107,25 +110,27 @@ if __name__ == '__main__':
         train_epoch_loss /= len(data_loader_iter)
 
         duration_of_epoch = int(time()-tic)
+        train_loss.append(train_epoch_loss)
         mylog.write('********************' + '\n')
         mylog.write('--epoch:' + str(epoch) + '  --time:' + str(duration_of_epoch) + '  --train_loss:' + str(
             train_epoch_loss) + '\n')
         print('--epoch:', epoch, '  --time:', duration_of_epoch, '  --train_loss:',
               train_epoch_loss)
 
-        if epoch % 5 == 0 and os.path.exists('weights/'+NAME+'.th'):
-            val_data_loader_iter = iter(val_data_loader)
-            validation_epoch_loss = 0
-            print("Validation: ")
-            for val_img, val_mask in val_data_loader_iter:
-                solver.set_input(val_img, val_mask)
-                val_loss = solver.optimize(True)
-                validation_epoch_loss += val_loss
-            validation_epoch_loss /= len(val_img_list)
-            mylog.write('--epoch:' + str(epoch) +
-                        '  --validation_loss:' + str(validation_epoch_loss) + '\n')
-            print('--epoch:', epoch,  '  --validation_loss:',
-                  validation_epoch_loss)
+        # if epoch % 5 == 0 and os.path.exists('weights/'+NAME+'.th'):
+        val_data_loader_iter = iter(val_data_loader)
+        validation_epoch_loss = 0
+        print("Validation: ")
+        for val_img, val_mask in val_data_loader_iter:
+            solver.set_input(val_img, val_mask)
+            val_loss = solver.optimize(True)
+            validation_epoch_loss += val_loss
+        validation_epoch_loss /= len(val_img_list)
+        val_loss.append(validation_epoch_loss)
+        mylog.write('--epoch:' + str(epoch) +
+                    '  --validation_loss:' + str(validation_epoch_loss) + '\n')
+        print('--epoch:', epoch,  '  --validation_loss:',
+                validation_epoch_loss)
 
         if train_epoch_loss >= train_epoch_best_loss:
             no_optim += 1
@@ -149,3 +154,6 @@ if __name__ == '__main__':
     print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
+
+    plt.plot(train_loss)
+    plt.plot(val_loss)

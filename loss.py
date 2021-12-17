@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable as V
+import torch.nn.functional as F
 
 import cv2
 import numpy as np
