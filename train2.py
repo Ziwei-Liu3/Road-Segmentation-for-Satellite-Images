@@ -1,5 +1,5 @@
 import torch
-import matplotlib as plt 
+import matplotlib.pyplot as plt
 # import torch.optim as optim
 # from torch.optim import lr_scheduler
 # import torch.utils.data as data
@@ -25,6 +25,8 @@ from data import ImageFolder
 # from test import TTAFrame
 
 SEED = 0
+
+
 
 if __name__ == '__main__':
 
@@ -96,21 +98,26 @@ if __name__ == '__main__':
     train_epoch_best_loss = 100.
     train_loss_list = []
     val_loss_list = []
+    F1_list = []
 
     for epoch in range(1, total_epoch + 1):
         print('---------- Epoch:'+str(epoch) + ' ----------')
         data_loader_iter = iter(data_loader)
         train_epoch_loss = 0
+        F1_epoch = 1
 
         print('Train:')
         for img, mask in data_loader_iter:
             solver.set_input(img, mask)
-            train_loss = solver.optimize()
+            train_loss = solver.optimize(True)
             train_epoch_loss += train_loss
         train_epoch_loss /= len(data_loader_iter)
 
         duration_of_epoch = int(time()-tic)
+        
+        # append the loss list 
         train_loss_list.append(train_epoch_loss)
+        
         mylog.write('********************' + '\n')
         mylog.write('--epoch:' + str(epoch) + '  --time:' + str(duration_of_epoch) + '  --train_loss:' + str(
             train_epoch_loss) + '\n')
@@ -123,10 +130,13 @@ if __name__ == '__main__':
         print("Validation: ")
         for val_img, val_mask in val_data_loader_iter:
             solver.set_input(val_img, val_mask)
-            val_loss = solver.optimize(True)
+            F1, val_loss = solver.optimize(True)
+            F1_epoch += F1/BATCHSIZE_PER_CARD
             validation_epoch_loss += val_loss
         validation_epoch_loss /= len(val_img_list)
         val_loss_list.append(validation_epoch_loss)
+        F1_list.append(F1_epoch)
+
         mylog.write('--epoch:' + str(epoch) +
                     '  --validation_loss:' + str(validation_epoch_loss) + '\n')
         print('--epoch:', epoch,  '  --validation_loss:',
@@ -149,8 +159,13 @@ if __name__ == '__main__':
             # solver.load(last_save_name)
             solver.load('weights/'+NAME+'.th')
             solver.update_lr(2.0, factor=True, mylog=mylog)
+            
         mylog.flush()
 
+    mylog.write('--complete_train_loss:' + str(train_loss_list) + '\n')
+    mylog.write('--complete_train_loss:' + str(val_loss_list) + '\n')
     print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
+    plt.plot(train_loss_list)
+    plt.plot(val_loss_list)

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable as V
+from sklearn.metrics import f1_score
 
 import cv2
 import numpy as np
@@ -17,6 +18,7 @@ class MyFrame():
         #self.optimizer = torch.optim.RMSprop(params=self.net.parameters(), lr=lr)
 
         self.loss = loss()
+        self.loss_F1 = loss_F1()
         self.old_lr = lr
         if evalmode:
             for i in self.net.modules():
@@ -66,14 +68,22 @@ class MyFrame():
         if not eval:
             self.optimizer.zero_grad()
             self.net.train()
+            pred = self.net.forward(self.img)
         else:
             self.net.eval()
-        pred = self.net.forward(self.img)
+            pred = self.net.forward(self.img)
+            F1 = self.compute_F1(pred, self.mask)
+            
         loss = self.loss(self.mask, pred)
         if not eval:
             loss.backward()
             self.optimizer.step()
-        return loss.item()
+        return pred, loss.item()
+
+    def compute_F1(pred, gt, args):
+        """extract label list"""
+        f1 = f1_score(pred.ravel(), np.array(gt).ravel())
+        return f1
 
     def save(self, path):
         torch.save(self.net.state_dict(), path)
