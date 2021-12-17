@@ -18,7 +18,6 @@ class MyFrame():
         #self.optimizer = torch.optim.RMSprop(params=self.net.parameters(), lr=lr)
 
         self.loss = loss()
-        self.loss_F1 = loss_F1()
         self.old_lr = lr
         if evalmode:
             for i in self.net.modules():
