@@ -81,7 +81,7 @@ class MyFrame():
         return F1, loss.item()
 
 
-    def compute_F1(pred, gt):
+    def compute_F1(self, pred, gt):
         """extract label list"""
         f1 = f1_score(torch.ravel(pred), torch.ravel(gt))
         return f1
