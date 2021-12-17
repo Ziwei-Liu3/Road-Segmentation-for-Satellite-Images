@@ -6,7 +6,6 @@ import torch
 # from torch.autograd import Variable as V
 import random
 import math
-
 # import cv2
 import os
 # import warnings
@@ -18,14 +17,22 @@ from networks.unet import Unet
 from networks.dunet import Dunet
 from networks.dinknet import LinkNet34, DinkNet34, DinkNet50, DinkNet101, DinkNet152, DinkNet34_less_pool
 from framework import MyFrame
-from loss import dice_bce_loss
+from loss import dice_bce_loss, bce_loss, F1_Loss, JaccLoss
 from data import ImageFolder
 
 # import torch.nn.functional as F
 # from test import TTAFrame
 
+SEED = 0
 
 if __name__ == '__main__':
+
+    # fix seed
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.backends.cudnn.deterministic = True
 
     # the network need the size to be a multiple of 32, resize is intriduced
     ORIG_SHAPE = (400, 400)
@@ -40,7 +47,7 @@ if __name__ == '__main__':
         [f for f in os.listdir(image_root) if f.endswith('.png')]))
     gt_list = np.array(sorted(
         [f for f in os.listdir(gt_root) if f.endswith('.png')]))
-    # imagelist = filter(lambda x: x.find('sat') != -1, os.listdir(train_root))
+    # imagelist = filter(lambda : x.find('sat') != -1, os.listdir(train_root))
 
     # random select 20% of training data for validation
     total_data_num = image_list.shape[0]
@@ -54,7 +61,7 @@ if __name__ == '__main__':
     image_list = image_list[new_train_indx].tolist()
     gt_list = gt_list[new_train_indx].tolist()
 
-    solver = MyFrame(DinkNet152, dice_bce_loss, 2e-4)
+    solver = MyFrame(DinkNet152, bce_loss, 2e-4)
 
     if torch.cuda.is_available():
         train_batchsize = torch.cuda.device_count() * BATCHSIZE_PER_CARD
