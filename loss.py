@@ -36,7 +36,7 @@ class dice_bce_loss(nn.Module):
 
 class bce_loss(nn.Module):
     def __init__(self, batch=True):
-        super(dice_bce_loss, self).__init__()
+        super(bce_loss, self).__init__()
         self.batch = batch
         self.bce_loss = nn.BCELoss()
 
