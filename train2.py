@@ -26,8 +26,6 @@ from data import ImageFolder
 
 SEED = 0
 
-
-
 if __name__ == '__main__':
 
     # fix seed
@@ -94,7 +92,7 @@ if __name__ == '__main__':
     mylog = open('logs/'+NAME+'.log', 'w')
     tic = time()
     no_optim = 0
-    total_epoch = 100
+    total_epoch = 2
     train_epoch_best_loss = 100.
     train_loss_list = []
     val_loss_list = []
@@ -104,12 +102,11 @@ if __name__ == '__main__':
         print('---------- Epoch:'+str(epoch) + ' ----------')
         data_loader_iter = iter(data_loader)
         train_epoch_loss = 0
-        F1_epoch = 1
 
         print('Train:')
         for img, mask in data_loader_iter:
             solver.set_input(img, mask)
-            train_loss = solver.optimize(True)
+            train_loss = solver.optimize()
             train_epoch_loss += train_loss
         train_epoch_loss /= len(data_loader_iter)
 
@@ -131,11 +128,11 @@ if __name__ == '__main__':
         for val_img, val_mask in val_data_loader_iter:
             solver.set_input(val_img, val_mask)
             F1, val_loss = solver.optimize(True)
-            F1_epoch += F1/BATCHSIZE_PER_CARD
+            print(F1)
             validation_epoch_loss += val_loss
         validation_epoch_loss /= len(val_img_list)
         val_loss_list.append(validation_epoch_loss)
-        F1_list.append(F1_epoch)
+        F1_list.append(F1)
 
         mylog.write('--epoch:' + str(epoch) +
                     '  --validation_loss:' + str(validation_epoch_loss) + '\n')
@@ -163,9 +160,8 @@ if __name__ == '__main__':
         mylog.flush()
 
     mylog.write('--complete_train_loss:' + str(train_loss_list) + '\n')
-    mylog.write('--complete_train_loss:' + str(val_loss_list) + '\n')
+    mylog.write('--complete_validation_loss:' + str(val_loss_list) + '\n')
+    mylog.write('--complete_F1_scores:' + str(F1_list) + '\n')
     print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
-    plt.plot(train_loss_list)
-    plt.plot(val_loss_list)
