@@ -89,6 +89,6 @@ class JaccLoss(nn.Module):
         total = (inputs + targets).sum()
         union = total - intersection 
         
-        Jacc = (intersection + smooth)/(union + smooth)
+        Jacc = (intersection + smooth)/(union + smooth) + nn.BCELoss(inputs, targets)
                 
         return 1 - Jacc
