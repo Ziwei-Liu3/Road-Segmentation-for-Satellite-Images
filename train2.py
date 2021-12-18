@@ -161,7 +161,7 @@ if __name__ == '__main__':
             train_epoch_best_loss = train_epoch_loss
             solver.save('weights/'+NAME+'.th')
 
-        if no_optim > 6:
+        if no_optim > 16:
             mylog.write('early stop at' + str(epoch)+'epoch')
             print('early stop at %d epoch' % epoch)
             break
