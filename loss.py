@@ -70,14 +70,15 @@ class F1_Loss(nn.Module):
         return 1 - F1_approx
 
 # Jaccard Loss, refered from: https://www.kaggle.com/bigironsphere/loss-function-library-keras-pytorch
+#PyTorch
 class JaccLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):
         super(JaccLoss, self).__init__()
 
-    def __call__(self, inputs, targets, smooth=1):
+    def forward(self, inputs, targets, smooth=1):
         
         #comment out if your model contains a sigmoid or equivalent activation layer
-        # inputs = F.sigmoid(inputs)       
+        inputs = F.sigmoid(inputs)       
         
         #flatten label and prediction tensors
         inputs = inputs.view(-1)
@@ -89,6 +90,9 @@ class JaccLoss(nn.Module):
         total = (inputs + targets).sum()
         union = total - intersection 
         
-        Jacc = (intersection + smooth)/(union + smooth) + nn.BCELoss(inputs, targets)
+        IoU = (intersection + smooth)/(union + smooth)
                 
-        return 1 - Jacc
+        return 1 - IoU
+    
+    def __call__(self, inputs, targets):
+        return self.forward(inputs, targets)
