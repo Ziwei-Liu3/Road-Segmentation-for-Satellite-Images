@@ -78,12 +78,12 @@ class MyFrame():
         pred_made = torch.clone(pred)
         pred_made[pred_made > 0.5] = 1
         pred_made[pred_made <= 0.5] = 0
-        F1 = self.compute_F1(pred_made, pred_made)
+        F1 = self.compute_F1(self.mask, pred_made, zero_division = 0)
         
         return F1, loss.item()
 
 
-    def compute_F1(self, pred, gt):
+    def compute_F1(self, gt, pred):
         """extract label list"""
         f1 = f1_score(torch.ravel(gt).cpu().detach().numpy(), \
             torch.ravel(pred).cpu().detach().numpy())
