@@ -62,7 +62,7 @@ if __name__ == '__main__':
     image_list = image_list[new_train_indx].tolist()
     gt_list = gt_list[new_train_indx].tolist()
 
-    solver = MyFrame(DinkNet152, bce_loss, 2e-4)
+    solver = MyFrame(DinkNet152, JaccLoss, 2e-4)
 
     if torch.cuda.is_available():
         train_batchsize = torch.cuda.device_count() * BATCHSIZE_PER_CARD
