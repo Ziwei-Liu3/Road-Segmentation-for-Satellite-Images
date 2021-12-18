@@ -103,15 +103,18 @@ if __name__ == '__main__':
         print('---------- Epoch:'+str(epoch) + ' ----------')
         data_loader_iter = iter(data_loader)
         train_epoch_loss = 0
-        j = 0
+        train_epoch_F1 = 0
+
         print('Train:')
         for img, mask in data_loader_iter:
             solver.set_input(img, mask)
             train_F1, train_loss = solver.optimize()
-            j += 1
+
             train_epoch_loss += train_loss
-            print("the {}th training F1 score is {}".format(j, train_F1))
+            train_epoch_F1 += train_F1
+
         train_epoch_loss /= len(data_loader_iter)
+        train_epoch_F1 /= len(data_loader_iter)
 
         duration_of_epoch = int(time()-tic)
 
@@ -122,29 +125,34 @@ if __name__ == '__main__':
         
         mylog.write('********************' + '\n')
         mylog.write('--epoch:' + str(epoch) + '  --time:' + str(duration_of_epoch) + '  --train_loss:' + str(
-            train_epoch_loss) + '\n')
+            train_epoch_loss) + '  --train_F1:' + str(
+            train_epoch_F1) + '\n')
         print('--epoch:', epoch, '  --time:', duration_of_epoch, '  --train_loss:',
-              train_epoch_loss)
+              train_epoch_loss, '  --train_F1:', train_epoch_F1)
 
         # if epoch % 5 == 0 and os.path.exists('weights/'+NAME+'.th'):
         val_data_loader_iter = iter(val_data_loader)
         validation_epoch_loss = 0
+        validation_epoch_F1 = 0
         print("Validation: ")
-        i = 0 
+
         for val_img, val_mask in val_data_loader_iter:
-            i += 1
             solver.set_input(val_img, val_mask)
             val_F1, val_loss = solver.optimize(True)
-            print("the {}th validation F1 score is {}".format(i, val_F1))
             validation_epoch_loss += val_loss
+            validation_epoch_F1 += val_F1
         validation_epoch_loss /= len(val_img_list)
+        validation_epoch_F1 /= len(val_img_list)
+        
         val_loss_list.append(validation_epoch_loss)
-        val_F1_list.append(val_F1)
+        val_F1_list.append(validation_epoch_F1)
 
         mylog.write('--epoch:' + str(epoch) +
-                    '  --validation_loss:' + str(validation_epoch_loss) + '\n')
+                    '  --validation_loss:' + str(validation_epoch_loss) + 
+                    '  --validation_F1:' + str(validation_epoch_F1) + '\n')
         print('--epoch:', epoch,  '  --validation_loss:',
-                validation_epoch_loss)
+                validation_epoch_loss, '  --validation_F1:',
+                validation_epoch_F1)
 
         if train_epoch_loss >= train_epoch_best_loss:
             no_optim += 1
