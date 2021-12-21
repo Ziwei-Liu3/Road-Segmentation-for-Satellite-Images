@@ -141,8 +141,8 @@ if __name__ == '__main__':
             val_F1, val_loss = solver.optimize(True)
             validation_epoch_loss += val_loss
             validation_epoch_F1 += val_F1
-        validation_epoch_loss /= len(val_img_list)
-        validation_epoch_F1 /= len(val_img_list)
+        validation_epoch_loss /= len(val_data_loader_iter)
+        validation_epoch_F1 /= len(val_data_loader_iter)
         
         val_loss_list.append(validation_epoch_loss)
         val_F1_list.append(validation_epoch_F1)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
             train_epoch_best_loss = train_epoch_loss
             solver.save('weights/'+NAME+'.th')
 
-        if no_optim > 16:
+        if no_optim > 6:
             mylog.write('early stop at' + str(epoch)+'epoch')
             print('early stop at %d epoch' % epoch)
             break
