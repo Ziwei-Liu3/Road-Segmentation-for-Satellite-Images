@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable as V
+from sklearn.metrics import f1_score
 
 import cv2
 import numpy as np
@@ -12,7 +13,9 @@ class MyFrame():
             'cuda' if torch.cuda.is_available() else 'cpu')
 
         self.net = net().to(self.device)
+        # self.net = torch.nn.DataParallel(self.net, device_ids=range(torch.cuda.device_count()))
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
+        #self.optimizer = torch.optim.RMSprop(params=self.net.parameters(), lr=lr)
 
         self.loss = loss()
         self.old_lr = lr
@@ -26,9 +29,26 @@ class MyFrame():
         self.mask = mask_batch
         self.img_id = img_id
 
+    def test_one_img(self, img):
+        pred = self.net.forward(img)
+
+        pred[pred > 0.5] = 1
+        pred[pred <= 0.5] = 0
+        mask = pred.squeeze().cpu().data.numpy()
+        return mask
+
+    def test_batch(self):
+        self.forward(volatile=True)
+        mask = self.net.forward(self.img).cpu().data.numpy().squeeze(1)
+        mask[mask > 0.5] = 1
+        mask[mask <= 0.5] = 0
+
+        return mask, self.img_id
+
     def test_one_img_from_path(self, path):
         img = cv2.imread(path)
         img = np.array(img, np.float32)/255.0 * 3.2 - 1.6
+        # img = V(torch.Tensor(img).cuda())
         img = V(torch.Tensor(img).to(self.device))
 
         mask = self.net.forward(img).squeeze(
@@ -47,14 +67,26 @@ class MyFrame():
         if not eval:
             self.optimizer.zero_grad()
             self.net.train()
-        else:
-            self.net.eval()
-        pred = self.net.forward(self.img)
-        loss = self.loss(self.mask, pred)
-        if not eval:
+            pred = self.net.forward(self.img)
+            loss = self.loss(self.mask, pred)
             loss.backward()
             self.optimizer.step()
-        return loss.item()
+        else:
+            self.net.eval()
+            pred = self.net.forward(self.img)
+            loss = self.loss(self.mask, pred)
+        pred_made = torch.clone(pred)
+        pred_made[pred_made > 0.5] = 1
+        pred_made[pred_made <= 0.5] = 0
+        F1 = self.compute_F1(self.mask, pred_made)
+        
+        return F1, loss.item()
+
+    def compute_F1(self, gt, pred):
+        """extract label list"""
+        f1 = f1_score(torch.ravel(gt).cpu().detach().numpy(), \
+            torch.ravel(pred).cpu().detach().numpy(), zero_division = 0)
+        return f1
 
     def save(self, path):
         torch.save(self.net.state_dict(), path)
