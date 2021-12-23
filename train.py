@@ -1,37 +1,46 @@
 import torch
+import matplotlib.pyplot as plt
+# import torch.optim as optim
+# from torch.optim import lr_scheduler
+# import torch.utils.data as data
+# from torch.autograd import Variable as V
+
 import random
 import math
-
-
+# import cv2
 import os
+# import warnings
 import numpy as np
 
 from time import time
 
+from networks.unet import Unet
+from networks.dunet import Dunet
 from networks.dinknet import LinkNet34, DinkNet34, DinkNet50, DinkNet101, DinkNet152, DinkNet34_less_pool
 from framework import MyFrame
-from loss import dice_bce_loss
-from data_preprocessing import ImageFolder
+from loss import dice_bce_loss, bce_loss, JaccLoss
+from data import ImageFolder
 
-# SEED = 0
+# import torch.nn.functional as F
+# from test import TTAFrame
 
+SEED = 0
 
-def train():
+if __name__ == '__main__':
 
     # fix seed
-    # torch.manual_seed(SEED)
-    # torch.cuda.manual_seed_all(SEED)
-    # np.random.seed(SEED)
-    # random.seed(SEED)
-    # torch.backends.cudnn.deterministic = True
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    np.random.seed(SEED)
+    random.seed(SEED)
+    torch.backends.cudnn.deterministic = True
 
-    # The network need the size to be a multiple of 32, resize is intriduced
+    # the network need the size to be a multiple of 32, resize is intriduced
     ORIG_SHAPE = (400, 400)
     SHAPE = (384, 384)
-    NAME = 'DinkNet152'
+    NAME = 'DinkNet152_8_2e_4'
     BATCHSIZE_PER_CARD = 8
 
-    # Loading the name of training images and groundtruth images
     train_root = 'dataset/train/'
     image_root = os.path.join(train_root, 'images')
     gt_root = os.path.join(train_root, 'groundtruth')
@@ -39,8 +48,9 @@ def train():
         [f for f in os.listdir(image_root) if f.endswith('.png')]))
     gt_list = np.array(sorted(
         [f for f in os.listdir(gt_root) if f.endswith('.png')]))
+    # imagelist = filter(lambda : x.find('sat') != -1, os.listdir(train_root))
 
-    # Randomly select 20% of training data for validation
+    # random select 20% of training data for validation
     total_data_num = image_list.shape[0]
     validation_data_num = math.ceil(total_data_num * 0.2)
     validation_idx = random.sample(range(total_data_num), validation_data_num)
@@ -61,16 +71,17 @@ def train():
         train_batchsize = BATCHSIZE_PER_CARD
         val_batchsize = BATCHSIZE_PER_CARD
 
-    # Data preprocessing for training set
+    #  data preprocessing here
     train_dataset = ImageFolder(image_list, image_root, gt_root, SHAPE)
-    # No data preprocessing for validation dataset
-    val_dataset = ImageFolder(val_img_list, image_root, gt_root, SHAPE, False)
+    val_dataset = ImageFolder(val_img_list, image_root, gt_root, SHAPE)
+    # print("train_dataset", train_dataset)
 
     data_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=train_batchsize,
         shuffle=True,
         num_workers=0)
+    # print("data loader", data_loader)
 
     val_data_loader = torch.utils.data.DataLoader(
         val_dataset,
@@ -78,90 +89,95 @@ def train():
         shuffle=True,
         num_workers=0)
 
-    if not os.path.exists('logs/'):
-        os.mkdir('logs/')
-
     mylog = open('logs/'+NAME+'.log', 'w')
     tic = time()
     no_optim = 0
-    no_optim_valid = 0
-    total_epoch = 300
+    total_epoch = 100
     train_epoch_best_loss = 100.
-    validation_epoch_best_loss = 100
+    train_loss_list = []
+    val_loss_list = []
+    train_F1_list = []
+    val_F1_list = []
 
     for epoch in range(1, total_epoch + 1):
         print('---------- Epoch:'+str(epoch) + ' ----------')
         data_loader_iter = iter(data_loader)
         train_epoch_loss = 0
-        validation_epoch_loss = 0
+        train_epoch_F1 = 0
 
         print('Train:')
         for img, mask in data_loader_iter:
             solver.set_input(img, mask)
-            train_loss = solver.optimize()
-            train_epoch_loss += train_loss
-        train_epoch_loss /= len(data_loader_iter)
+            train_F1, train_loss = solver.optimize()
 
-        # Writing log
+            train_epoch_loss += train_loss
+            train_epoch_F1 += train_F1
+
+        train_epoch_loss /= len(data_loader_iter)
+        train_epoch_F1 /= len(data_loader_iter)
+
         duration_of_epoch = int(time()-tic)
+
+        train_F1_list.append(train_F1)
+        
+        # append the loss list 
+        train_loss_list.append(train_epoch_loss)
+        
         mylog.write('********************' + '\n')
         mylog.write('--epoch:' + str(epoch) + '  --time:' + str(duration_of_epoch) + '  --train_loss:' + str(
-            train_epoch_loss) + '\n')
-        # Print training loss
+            train_epoch_loss) + '  --train_F1:' + str(
+            train_epoch_F1) + '\n')
         print('--epoch:', epoch, '  --time:', duration_of_epoch, '  --train_loss:',
-              train_epoch_loss)
+              train_epoch_loss, '  --train_F1:', train_epoch_F1)
 
-        #  Do validation every 5 epochs
-        if epoch % 5 == 0:
-            val_data_loader_iter = iter(val_data_loader)
+        # if epoch % 5 == 0 and os.path.exists('weights/'+NAME+'.th'):
+        val_data_loader_iter = iter(val_data_loader)
+        validation_epoch_loss = 0
+        validation_epoch_F1 = 0
+        print("Validation: ")
 
-            print("Validation: ")
-            for val_img, val_mask in val_data_loader_iter:
-                solver.set_input(val_img, val_mask)
-                val_loss = solver.optimize(True)
-                validation_epoch_loss += val_loss
-            validation_epoch_loss /= len(val_data_loader_iter)
-            # Writing log
-            mylog.write('--epoch:' + str(epoch) +
-                        '  --validation_loss:' + str(validation_epoch_loss) + '\n')
-            # Print validation loss
-            print('--epoch:', epoch,  '  --validation_loss:',
-                  validation_epoch_loss)
+        for val_img, val_mask in val_data_loader_iter:
+            solver.set_input(val_img, val_mask)
+            val_F1, val_loss = solver.optimize(True)
+            validation_epoch_loss += val_loss
+            validation_epoch_F1 += val_F1
+        validation_epoch_loss /= len(val_data_loader_iter)
+        validation_epoch_F1 /= len(val_data_loader_iter)
+        
+        val_loss_list.append(validation_epoch_loss)
+        val_F1_list.append(validation_epoch_F1)
 
-            if validation_epoch_loss < validation_epoch_best_loss:
-                no_optim_valid = 0
-                validation_epoch_best_loss = validation_epoch_loss
-                # Store the weight
-                solver.save('weights/'+NAME+'.th')
-            else:
-                no_optim_valid += 1
-                if no_optim_valid >= 3:
-                    # Early Stop
-                    mylog.write(
-                        'Validation loss not improving, early stop at' + str(epoch)+'epoch')
-                    print(
-                        'Validation loss not improving, early stop at %d epoch' % epoch)
-                    break
+        mylog.write('--epoch:' + str(epoch) +
+                    '  --validation_loss:' + str(validation_epoch_loss) + 
+                    '  --validation_F1:' + str(validation_epoch_F1) + '\n')
+        print('--epoch:', epoch,  '  --validation_loss:',
+                validation_epoch_loss, '  --validation_F1:',
+                validation_epoch_F1)
 
         if train_epoch_loss >= train_epoch_best_loss:
             no_optim += 1
         else:
             no_optim = 0
             train_epoch_best_loss = train_epoch_loss
+            solver.save('weights/'+NAME+'.th')
 
         if no_optim > 6:
-            # Early Stop
             mylog.write('early stop at' + str(epoch)+'epoch')
             print('early stop at %d epoch' % epoch)
             break
-        if no_optim > 3:
-            if solver.old_lr < 5e-7:
-                break
+        if no_optim > 3 and solver.old_lr>=5e-7:
+            # if solver.old_lr < 5e-7:
+            #     break
+            # solver.load(last_save_name)
             solver.load('weights/'+NAME+'.th')
-            #  Adjust learning reate
-            solver.update_lr(5.0, factor=True, mylog=mylog)
+            solver.update_lr(2.0, factor=True, mylog=mylog)
+            
         mylog.flush()
 
-    mylog.write('Finish!')
+    mylog.write('--complete_train_loss:' + str(train_loss_list) + '\n')
+    mylog.write('--complete_validation_loss:' + str(val_loss_list) + '\n')
+    mylog.write('--complete_train_F1_scores:' + str(train_F1_list) + '\n')
+    mylog.write('--complete_validation_F1_scores:' + str(val_F1_list) + '\n')
+    print(mylog, 'Finish!')
     print('Finish!')
     mylog.close()
