@@ -1,6 +1,6 @@
 # Project Road Segmentation
 
-This project focuses on an image binary semantic segmentation problem, which extract roads from a set of satellite images. We implemented a model based on Dinknet152, and also introduced data augmentation schemes and mechanism to fine-tune hyperparameters. We finally reached an accuracy of 0.957 and a F1 score of 0.918, ranking 7th on AIcrowd leaderboard. 
+This project focuses on an image binary semantic segmentation problem, which extract roads from a set of satellite images. We implemented a model based on Dinknet152, and also introduced data augmentation schemes and mechanism to fine-tune hyperparameters. We finally reached an accuracy of 0.957 and a F1 score of 0.918, ranking 6th on AIcrowd leaderboard. 
 
 ## Structure of the project
 ```
